@@ -1,0 +1,110 @@
+import { z } from "zod";
+import { insertUserSchema, insertTicketSchema, insertWarLogSchema, insertPvpLogSchema, users, tickets, warLogs, pvpLogs } from "./schema";
+
+export const errorSchemas = {
+  validation: z.object({
+    message: z.string(),
+    field: z.string().optional(),
+  }),
+  notFound: z.object({
+    message: z.string(),
+  }),
+  unauthorized: z.object({
+    message: z.string(),
+  }),
+};
+
+export const api = {
+  auth: {
+    me: {
+      method: "GET" as const,
+      path: "/api/user",
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+        401: z.null(),
+      },
+    },
+    logout: {
+      method: "POST" as const,
+      path: "/api/logout",
+      responses: {
+        200: z.object({ message: z.string() }),
+      },
+    },
+  },
+  tickets: {
+    list: {
+      method: "GET" as const,
+      path: "/api/tickets",
+      responses: {
+        200: z.array(z.custom<typeof tickets.$inferSelect>()),
+      },
+    },
+    create: {
+      method: "POST" as const,
+      path: "/api/tickets",
+      input: insertTicketSchema,
+      responses: {
+        201: z.custom<typeof tickets.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+    update: {
+      method: "PATCH" as const,
+      path: "/api/tickets/:id",
+      input: insertTicketSchema.partial(),
+      responses: {
+        200: z.custom<typeof tickets.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+  },
+  warLogs: {
+    list: {
+      method: "GET" as const,
+      path: "/api/war-logs",
+      responses: {
+        200: z.array(z.custom<typeof warLogs.$inferSelect>()),
+      },
+    },
+    create: {
+      method: "POST" as const,
+      path: "/api/war-logs",
+      input: insertWarLogSchema,
+      responses: {
+        201: z.custom<typeof warLogs.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+  },
+  pvpLogs: {
+    list: {
+      method: "GET" as const,
+      path: "/api/pvp-logs",
+      responses: {
+        200: z.array(z.custom<typeof pvpLogs.$inferSelect>()),
+      },
+    },
+    create: {
+      method: "POST" as const,
+      path: "/api/pvp-logs",
+      input: insertPvpLogSchema,
+      responses: {
+        201: z.custom<typeof pvpLogs.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+  },
+};
+
+export function buildUrl(path: string, params?: Record<string, string | number>): string {
+  let url = path;
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (url.includes(`:${key}`)) {
+        url = url.replace(`:${key}`, String(value));
+      }
+    });
+  }
+  return url;
+}
