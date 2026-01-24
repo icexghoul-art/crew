@@ -47,7 +47,8 @@ export async function registerRoutes(
   // Discord Strategy
   const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
   const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-  const DISCORD_CALLBACK_URL = `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : ""}/api/auth/discord/callback`;
+  // Use the exact redirect URL provided to the user to avoid mismatch
+  const DISCORD_CALLBACK_URL = "https://916f9f74-32ae-44d5-832f-5374be217a6a-00-1j1p28qg715j9.spock.replit.dev/api/auth/discord/callback";
 
   if (DISCORD_CLIENT_ID && DISCORD_CLIENT_SECRET) {
     passport.use(
