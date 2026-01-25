@@ -11,11 +11,11 @@ import { pool } from "./db";
 
 export async function registerRoutes(
   httpServer: Server,
-  app: Express
+  app: Express,
 ): Promise<Server> {
   // Auth Setup
   const PgSession = connectPgSimple(session);
-  
+
   app.use(
     session({
       store: new PgSession({ pool, createTableIfMissing: true }),
@@ -23,7 +23,7 @@ export async function registerRoutes(
       resave: false,
       saveUninitialized: false,
       cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }, // 30 days
-    })
+    }),
   );
 
   app.use(passport.initialize());
@@ -48,7 +48,8 @@ export async function registerRoutes(
   const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
   const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
   // Use the exact redirect URL provided to the user to avoid mismatch
-  const DISCORD_CALLBACK_URL = "https://916f9f74-32ae-44d5-832f-5374be217a6a-00-1j1p28qg715j9.spock.replit.dev/api/auth/discord/callback";
+  const DISCORD_CALLBACK_URL =
+    "https://blox-fruits-hub--icexbest.replit.app/api/auth/discord/callback";
 
   if (DISCORD_CLIENT_ID && DISCORD_CLIENT_SECRET) {
     passport.use(
@@ -64,10 +65,13 @@ export async function registerRoutes(
             const existingUser = await storage.getUserByDiscordId(profile.id);
             if (existingUser) {
               // Update avatar if changed
-              if (existingUser.avatar !== `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`) {
-                 await storage.updateUser(existingUser.id, {
-                   avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
-                 });
+              if (
+                existingUser.avatar !==
+                `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
+              ) {
+                await storage.updateUser(existingUser.id, {
+                  avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
+                });
               }
               return done(null, existingUser);
             }
@@ -83,18 +87,24 @@ export async function registerRoutes(
           } catch (err) {
             return done(err as Error);
           }
-        }
-      )
+        },
+      ),
     );
   } else {
-    console.warn("Missing DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET. Discord auth will not work.");
+    console.warn(
+      "Missing DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET. Discord auth will not work.",
+    );
   }
 
   // === AUTH ROUTES ===
-  
+
   app.get("/api/auth/discord", (req, res, next) => {
     if (!DISCORD_CLIENT_ID) {
-      return res.status(500).send("Discord Auth not configured. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET secrets.");
+      return res
+        .status(500)
+        .send(
+          "Discord Auth not configured. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET secrets.",
+        );
     }
     passport.authenticate("discord")(req, res, next);
   });
@@ -106,7 +116,7 @@ export async function registerRoutes(
     }),
     (req, res) => {
       res.redirect("/");
-    }
+    },
   );
 
   app.get(api.auth.me.path, (req, res) => {
@@ -135,7 +145,10 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const input = api.tickets.create.input.parse(req.body);
-      const ticket = await storage.createTicket({ ...input, creatorId: (req.user as any).id });
+      const ticket = await storage.createTicket({
+        ...input,
+        creatorId: (req.user as any).id,
+      });
       res.status(201).json(ticket);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -164,11 +177,14 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const input = api.warLogs.create.input.parse(req.body);
-      const log = await storage.createWarLog({ ...input, loggedBy: (req.user as any).id });
+      const log = await storage.createWarLog({
+        ...input,
+        loggedBy: (req.user as any).id,
+      });
       res.status(201).json(log);
     } catch (err) {
       if (err instanceof z.ZodError) {
-         return res.status(400).json({ message: err.errors[0].message });
+        return res.status(400).json({ message: err.errors[0].message });
       }
       throw err;
     }
@@ -184,11 +200,14 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const input = api.pvpLogs.create.input.parse(req.body);
-      const log = await storage.createPvpLog({ ...input, loggedBy: (req.user as any).id });
+      const log = await storage.createPvpLog({
+        ...input,
+        loggedBy: (req.user as any).id,
+      });
       res.status(201).json(log);
     } catch (err) {
-       if (err instanceof z.ZodError) {
-         return res.status(400).json({ message: err.errors[0].message });
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
       }
       throw err;
     }
