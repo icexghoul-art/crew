@@ -16,6 +16,7 @@ export async function registerRoutes(
   // Auth Setup
   const PgSession = connectPgSimple(session);
 
+  app.set("trust proxy", 1);
   app.use(
     session({
       store: new PgSession({
@@ -26,11 +27,15 @@ export async function registerRoutes(
       resave: false,
       saveUninitialized: false,
       cookie: {
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        secure: process.env.NODE_ENV === "production",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        secure: true, // Gardez true pour HTTPS
         httpOnly: true,
+        path: "/",
         sameSite: "lax",
+        domain: undefined, // ← Important : pas de domaine spécifique
       },
+      proxy: true, // ← AJOUTEZ cette ligne (important pour Replit)
+      name: "connect.sid", // ← Nom standard du cookie
     }),
   );
 
