@@ -47,12 +47,8 @@ export async function registerRoutes(
   // Discord Strategy
   const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
   const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-  // Use a dynamic callback URL based on the request host
-  const getCallbackUrl = (req: any) => {
-    const protocol = req.headers["x-forwarded-proto"] || "http";
-    const host = req.headers["host"];
-    return `${protocol}://${host}/api/auth/discord/callback`;
-  };
+  const DISCORD_CALLBACK_URL =
+    "https://blox-fruits-hub--icexbest.replit.app/api/auth/discord/callback";
 
   if (DISCORD_CLIENT_ID && DISCORD_CLIENT_SECRET) {
     passport.use(
@@ -60,7 +56,7 @@ export async function registerRoutes(
         {
           clientID: DISCORD_CLIENT_ID,
           clientSecret: DISCORD_CLIENT_SECRET,
-          callbackURL: "", // Will be set dynamically in the route
+          callbackURL: DISCORD_CALLBACK_URL,
           scope: ["identify"],
         },
         async (accessToken, refreshToken, profile, done) => {
@@ -109,19 +105,18 @@ export async function registerRoutes(
           "Discord Auth not configured. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET secrets.",
         );
     }
-    const callbackURL = getCallbackUrl(req);
-    passport.authenticate("discord", { callbackURL })(req, res, next);
+    passport.authenticate("discord")(req, res, next);
   });
 
-  app.get("/api/auth/discord/callback", (req, res, next) => {
-    const callbackURL = getCallbackUrl(req);
+  app.get(
+    "/api/auth/discord/callback",
     passport.authenticate("discord", {
-      callbackURL,
       failureRedirect: "/",
-    })(req, res, next);
-  }, (req, res) => {
-    res.redirect("/");
-  });
+    }),
+    (req, res) => {
+      res.redirect("/");
+    },
+  );
 
   app.get(api.auth.me.path, (req, res) => {
     if (req.isAuthenticated()) {
