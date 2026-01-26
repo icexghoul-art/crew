@@ -47,7 +47,7 @@ export async function registerRoutes(
   // Discord Strategy
   const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
   const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-  // Use the exact redirect URL provided to the user to avoid mismatch
+  // Use the exact redirect URL from the browser address bar in the error screenshot
   const DISCORD_CALLBACK_URL =
     "https://blox-fruits-hub--icexbest.replit.app/api/auth/discord/callback";
 
