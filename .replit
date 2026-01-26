@@ -38,6 +38,24 @@ task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "shell"
+mode = "sequential"
+author = 48803201
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "rm -rf dist"
+
+[[workflows.workflow]]
+name = "build"
+mode = "sequential"
+author = 48803201
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run build"
+
 [userenv]
 
 [userenv.shared]
