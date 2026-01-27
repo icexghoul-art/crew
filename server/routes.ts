@@ -16,26 +16,13 @@ export async function registerRoutes(
   // Auth Setup
   const PgSession = connectPgSimple(session);
 
-  app.set("trust proxy", 1);
   app.use(
     session({
-      store: new PgSession({
-        pool,
-        tableName: "session",
-      }),
+      store: new PgSession({ pool, createTableIfMissing: true }),
       secret: process.env.SESSION_SECRET || "default_secret",
       resave: false,
       saveUninitialized: false,
-      cookie: {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        secure: true, // Gardez true pour HTTPS
-        httpOnly: true,
-        path: "/",
-        sameSite: "lax",
-        domain: undefined, // ← Important : pas de domaine spécifique
-      },
-      proxy: true, // ← AJOUTEZ cette ligne (important pour Replit)
-      name: "connect.sid", // ← Nom standard du cookie
+      cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }, // 30 days
     }),
   );
 
@@ -60,8 +47,12 @@ export async function registerRoutes(
   // Discord Strategy
   const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
   const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-  const DISCORD_CALLBACK_URL =
-    "https://blox-fruits-hub--icexbest.replit.app/api/auth/discord/callback";
+  // Use a dynamic callback URL based on the request host
+  const getCallbackUrl = (req: any) => {
+    const protocol = req.headers["x-forwarded-proto"] || "http";
+    const host = req.headers["host"];
+    return `${protocol}://${host}/api/auth/discord/callback`;
+  };
 
   if (DISCORD_CLIENT_ID && DISCORD_CLIENT_SECRET) {
     passport.use(
@@ -69,7 +60,7 @@ export async function registerRoutes(
         {
           clientID: DISCORD_CLIENT_ID,
           clientSecret: DISCORD_CLIENT_SECRET,
-          callbackURL: DISCORD_CALLBACK_URL,
+          callbackURL: "", // Will be set dynamically in the route
           scope: ["identify"],
         },
         async (accessToken, refreshToken, profile, done) => {
@@ -102,10 +93,6 @@ export async function registerRoutes(
         },
       ),
     );
-  } else {
-    console.warn(
-      "Missing DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET. Discord auth will not work.",
-    );
   }
 
   // === AUTH ROUTES ===
@@ -118,14 +105,19 @@ export async function registerRoutes(
           "Discord Auth not configured. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET secrets.",
         );
     }
-    passport.authenticate("discord")(req, res, next);
+    const callbackURL = getCallbackUrl(req);
+    passport.authenticate("discord", { callbackURL })(req, res, next);
   });
 
   app.get(
     "/api/auth/discord/callback",
-    passport.authenticate("discord", {
-      failureRedirect: "/",
-    }),
+    (req, res, next) => {
+      const callbackURL = getCallbackUrl(req);
+      passport.authenticate("discord", {
+        callbackURL,
+        failureRedirect: "/",
+      })(req, res, next);
+    },
     (req, res) => {
       res.redirect("/");
     },
@@ -153,6 +145,14 @@ export async function registerRoutes(
     res.json(tickets);
   });
 
+  app.get(api.tickets.get.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    const ticket = await storage.getTicketWithMessages(id);
+    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+    res.json(ticket);
+  });
+
   app.post(api.tickets.create.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
@@ -172,11 +172,43 @@ export async function registerRoutes(
 
   app.patch(api.tickets.update.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    // Add logic here to check if user is admin or assignee
     const id = parseInt(req.params.id);
     const input = api.tickets.update.input.parse(req.body);
     const ticket = await storage.updateTicket(id, input);
     res.json(ticket);
+  });
+
+  app.post(api.tickets.addMessage.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    const input = api.tickets.addMessage.input.parse(req.body);
+    const message = await storage.addTicketMessage({
+      ticketId: id,
+      senderId: (req.user as any).id,
+      content: input.content,
+    });
+    res.status(201).json(message);
+  });
+
+  // === ADMIN ROUTES ===
+  app.get(api.admin.users.path, async (req, res) => {
+    if (!req.isAuthenticated() || (req.user as any).role !== "admin") return res.sendStatus(403);
+    const users = await storage.getAllUsers();
+    res.json(users);
+  });
+
+  app.patch(api.admin.updateUser.path, async (req, res) => {
+    if (!req.isAuthenticated() || (req.user as any).role !== "admin") return res.sendStatus(403);
+    const id = parseInt(req.params.id);
+    const input = api.admin.updateUser.input.parse(req.body);
+    const user = await storage.updateUser(id, input);
+    res.json(user);
+  });
+
+  // === WAR TEAM ROUTES ===
+  app.get(api.warTeam.list.path, async (req, res) => {
+    const team = await storage.getWarTeam();
+    res.json(team);
   });
 
   // === WAR LOG ROUTES ===

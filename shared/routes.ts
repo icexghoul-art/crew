@@ -37,7 +37,15 @@ export const api = {
       method: "GET" as const,
       path: "/api/tickets",
       responses: {
-        200: z.array(z.custom<typeof tickets.$inferSelect>()),
+        200: z.array(z.custom<typeof tickets.$inferSelect & { creator: typeof users.$inferSelect, assignee?: typeof users.$inferSelect }>()),
+      },
+    },
+    get: {
+      method: "GET" as const,
+      path: "/api/tickets/:id",
+      responses: {
+        200: z.custom<typeof tickets.$inferSelect & { messages: (typeof ticketMessages.$inferSelect & { sender: typeof users.$inferSelect })[] }>(),
+        404: errorSchemas.notFound,
       },
     },
     create: {
@@ -56,6 +64,45 @@ export const api = {
       responses: {
         200: z.custom<typeof tickets.$inferSelect>(),
         404: errorSchemas.notFound,
+      },
+    },
+    addMessage: {
+      method: "POST" as const,
+      path: "/api/tickets/:id/messages",
+      input: z.object({ content: z.string() }),
+      responses: {
+        201: z.custom<typeof ticketMessages.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
+  },
+  admin: {
+    users: {
+      method: "GET" as const,
+      path: "/api/admin/users",
+      responses: {
+        200: z.array(z.custom<typeof users.$inferSelect>()),
+        403: errorSchemas.unauthorized,
+      },
+    },
+    updateUser: {
+      method: "PATCH" as const,
+      path: "/api/admin/users/:id",
+      input: z.object({ role: z.enum(["admin", "moderator", "member", "guest", "war_fighter"]) }),
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+        403: errorSchemas.unauthorized,
+        404: errorSchemas.notFound,
+      },
+    },
+  },
+  warTeam: {
+    list: {
+      method: "GET" as const,
+      path: "/api/war-team",
+      responses: {
+        200: z.array(z.custom<typeof users.$inferSelect>()),
       },
     },
   },

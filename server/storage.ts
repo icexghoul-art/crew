@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { users, tickets, warLogs, pvpLogs, type User, type InsertUser, type Ticket, type InsertTicket, type WarLog, type InsertWarLog, type PvpLog, type InsertPvpLog } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { users, tickets, ticketMessages, warLogs, pvpLogs, type User, type InsertUser, type Ticket, type InsertTicket, type WarLog, type InsertWarLog, type PvpLog, type InsertPvpLog, type InsertTicketMessage } from "@shared/schema";
+import { eq, desc, and, or } from "drizzle-orm";
 
 export interface IStorage {
   // User
@@ -8,12 +8,14 @@ export interface IStorage {
   getUserByDiscordId(discordId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
+  getAllUsers(): Promise<User[]>;
 
   // Tickets
-  getTickets(): Promise<Ticket[]>;
-  getTicket(id: number): Promise<Ticket | undefined>;
+  getTickets(): Promise<(Ticket & { creator: User, assignee?: User })[]>;
+  getTicketWithMessages(id: number): Promise<(Ticket & { messages: any[] }) | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   updateTicket(id: number, ticket: Partial<InsertTicket>): Promise<Ticket>;
+  addTicketMessage(message: InsertTicketMessage): Promise<any>;
 
   // War Logs
   getWarLogs(): Promise<WarLog[]>;
@@ -22,10 +24,12 @@ export interface IStorage {
   // PvP Logs
   getPvpLogs(): Promise<PvpLog[]>;
   createPvpLog(log: InsertPvpLog): Promise<PvpLog>;
+  
+  // War Team
+  getWarTeam(): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // User
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -46,14 +50,34 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  // Tickets
-  async getTickets(): Promise<Ticket[]> {
-    return await db.select().from(tickets).orderBy(desc(tickets.createdAt));
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
   }
 
-  async getTicket(id: number): Promise<Ticket | undefined> {
+  async getTickets(): Promise<(Ticket & { creator: User, assignee?: User })[]> {
+    const rows = await db.select().from(tickets).orderBy(desc(tickets.createdAt));
+    const ticketsWithUsers = await Promise.all(rows.map(async (ticket) => {
+      const creator = await this.getUser(ticket.creatorId);
+      const assignee = ticket.assigneeId ? await this.getUser(ticket.assigneeId) : undefined;
+      return { ...ticket, creator: creator!, assignee };
+    }));
+    return ticketsWithUsers;
+  }
+
+  async getTicketWithMessages(id: number): Promise<(Ticket & { messages: any[] }) | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id));
-    return ticket;
+    if (!ticket) return undefined;
+    
+    const messages = await db.select().from(ticketMessages)
+      .where(eq(ticketMessages.ticketId, id))
+      .orderBy(ticketMessages.createdAt);
+      
+    const messagesWithSenders = await Promise.all(messages.map(async (m) => {
+      const sender = await this.getUser(m.senderId);
+      return { ...m, sender: sender! };
+    }));
+    
+    return { ...ticket, messages: messagesWithSenders };
   }
 
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
@@ -66,7 +90,12 @@ export class DatabaseStorage implements IStorage {
     return ticket;
   }
 
-  // War Logs
+  async addTicketMessage(message: InsertTicketMessage): Promise<any> {
+    const [msg] = await db.insert(ticketMessages).values(message).returning();
+    const sender = await this.getUser(msg.senderId);
+    return { ...msg, sender: sender! };
+  }
+
   async getWarLogs(): Promise<WarLog[]> {
     return await db.select().from(warLogs).orderBy(desc(warLogs.createdAt));
   }
@@ -76,7 +105,6 @@ export class DatabaseStorage implements IStorage {
     return log;
   }
 
-  // PvP Logs
   async getPvpLogs(): Promise<PvpLog[]> {
     return await db.select().from(pvpLogs).orderBy(desc(pvpLogs.createdAt));
   }
@@ -84,6 +112,10 @@ export class DatabaseStorage implements IStorage {
   async createPvpLog(insertLog: InsertPvpLog): Promise<PvpLog> {
     const [log] = await db.insert(pvpLogs).values(insertLog).returning();
     return log;
+  }
+
+  async getWarTeam(): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, "war_fighter"));
   }
 }
 

@@ -9,7 +9,7 @@ export const users = pgTable("users", {
   username: text("username").notNull(),
   discordId: text("discord_id").unique(),
   avatar: text("avatar"),
-  role: text("role", { enum: ["admin", "moderator", "member", "guest"] }).default("guest").notNull(),
+  role: text("role", { enum: ["admin", "moderator", "member", "guest", "war_fighter"] }).default("guest").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -20,13 +20,24 @@ export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
   type: text("type", { enum: ["tryout", "war_request"] }).notNull(),
   status: text("status", { enum: ["open", "pending", "closed"] }).default("open").notNull(),
-  creatorId: integer("creator_id").notNull(), // User who created the ticket
-  assigneeId: integer("assignee_id"), // Admin handling it
+  creatorId: integer("creator_id").notNull(),
+  assigneeId: integer("assignee_id"),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({ id: true, createdAt: true });
+
+// === TICKET MESSAGES ===
+export const ticketMessages = pgTable("ticket_messages", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").notNull(),
+  senderId: integer("sender_id").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTicketMessageSchema = createInsertSchema(ticketMessages).omit({ id: true, createdAt: true });
 
 // === WAR LOGS ===
 export const warLogs = pgTable("war_logs", {
@@ -34,7 +45,7 @@ export const warLogs = pgTable("war_logs", {
   type: text("type", { enum: ["2v2", "3v3", "6v6", "public"] }).notNull(),
   opponentCrew: text("opponent_crew").notNull(),
   result: text("result", { enum: ["win", "loss"] }).notNull(),
-  score: text("score").notNull(), // e.g., "3-0"
+  score: text("score").notNull(),
   proofImage: text("proof_image"),
   loggedBy: integer("logged_by").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -46,7 +57,7 @@ export const insertWarLogSchema = createInsertSchema(warLogs).omit({ id: true, c
 export const pvpLogs = pgTable("pvp_logs", {
   id: serial("id").primaryKey(),
   winnerId: integer("winner_id").notNull(),
-  loserName: text("loser_name").notNull(), // Can be external user or crew member
+  loserName: text("loser_name").notNull(),
   score: text("score").notNull(),
   proofImage: text("proof_image"),
   loggedBy: integer("logged_by").notNull(),
@@ -61,9 +72,10 @@ export const usersRelations = relations(users, ({ many }) => ({
   assignedTickets: many(tickets, { relationName: "assignee" }),
   warLogs: many(warLogs),
   pvpLogs: many(pvpLogs),
+  messages: many(ticketMessages),
 }));
 
-export const ticketsRelations = relations(tickets, ({ one }) => ({
+export const ticketsRelations = relations(tickets, ({ one, many }) => ({
   creator: one(users, {
     fields: [tickets.creatorId],
     references: [users.id],
@@ -73,6 +85,18 @@ export const ticketsRelations = relations(tickets, ({ one }) => ({
     fields: [tickets.assigneeId],
     references: [users.id],
     relationName: "assignee",
+  }),
+  messages: many(ticketMessages),
+}));
+
+export const ticketMessagesRelations = relations(ticketMessages, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [ticketMessages.ticketId],
+    references: [tickets.id],
+  }),
+  sender: one(users, {
+    fields: [ticketMessages.senderId],
+    references: [users.id],
   }),
 }));
 
@@ -97,12 +121,11 @@ export const pvpLogsRelations = relations(pvpLogs, ({ one }) => ({
 // === TYPES ===
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-
 export type Ticket = typeof tickets.$inferSelect;
 export type InsertTicket = z.infer<typeof insertTicketSchema>;
-
+export type TicketMessage = typeof ticketMessages.$inferSelect;
+export type InsertTicketMessage = z.infer<typeof insertTicketMessageSchema>;
 export type WarLog = typeof warLogs.$inferSelect;
 export type InsertWarLog = z.infer<typeof insertWarLogSchema>;
-
 export type PvpLog = typeof pvpLogs.$inferSelect;
 export type InsertPvpLog = z.infer<typeof insertPvpLogSchema>;
