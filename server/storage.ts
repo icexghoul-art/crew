@@ -120,11 +120,11 @@ export class DatabaseStorage implements IStorage {
   }
 
 async updateWarTeam(id: number, updates: Partial<InsertWarTeam>): Promise<WarTeam> {
-  // Assurer que memberIds est un vrai array
-  const memberIdsArray = updates.memberIds
+  // Forcer memberIds en number[]
+  const memberIdsArray: number[] | undefined = updates.memberIds
     ? Array.isArray(updates.memberIds)
       ? updates.memberIds
-      : Array.from(updates.memberIds)
+      : Array.from(updates.memberIds) as number[]
     : undefined;
 
   const [team] = await db.update(warTeams)
