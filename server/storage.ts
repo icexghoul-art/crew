@@ -1,7 +1,6 @@
 import { db } from "./db";
 import { users, tickets, ticketMessages, warLogs, pvpLogs, warTeams, type User, type InsertUser, type Ticket, type InsertTicket, type WarLog, type InsertWarLog, type PvpLog, type InsertPvpLog, type InsertTicketMessage, type WarTeam, type InsertWarTeam } from "@shared/schema";
 import { eq, desc, and, or } from "drizzle-orm";
-import { ticketMessages } from "@shared/schema";
 
 export interface IStorage {
   // User
