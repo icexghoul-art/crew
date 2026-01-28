@@ -115,6 +115,6 @@
   "scripts": {
   "build": "tsc",
   "migrate": "npx drizzle-kit migrate",
-  "start": node dist/server/index.js"
+  "start": "node dist/server/index.js"
 }
 }
