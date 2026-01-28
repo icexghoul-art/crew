@@ -71,7 +71,7 @@ export default function Home() {
               className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25"
               asChild
             >
-              <a href="/api/auth/discord">
+              <a href="https://crew-api.onrender.com/api/auth/discord">
                 Join via Discord <ChevronRight className="ml-2 w-5 h-5" />
               </a>
             </Button>

@@ -139,7 +139,7 @@ export function Navigation() {
                   className="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white"
                   asChild
                 >
-                  <a href="/api/auth/discord">Log In with Discord</a>
+                  <a href="https://crew-api.onrender.com/api/auth/discord">Log In with Discord</a>
                 </Button>
               )}
             </div>
