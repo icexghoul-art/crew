@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 const TEAM_TIERS = ["Z", "Y", "X", "S", "A"] as const;
 const TIER_COLORS = {
