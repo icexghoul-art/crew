@@ -119,10 +119,21 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(warTeams).orderBy(warTeams.tier);
   }
 
-  async updateWarTeam(id: number, updates: Partial<InsertWarTeam>): Promise<WarTeam> {
-    const [team] = await db.update(warTeams).set({ ...updates, updatedAt: new Date() }).where(eq(warTeams.id, id)).returning();
-    return team;
-  }
+async updateWarTeam(id: number, updates: Partial<InsertWarTeam>): Promise<WarTeam> {
+  // Assurer que memberIds est un vrai array
+  const memberIdsArray = updates.memberIds
+    ? Array.isArray(updates.memberIds)
+      ? updates.memberIds
+      : Array.from(updates.memberIds)
+    : undefined;
+
+  const [team] = await db.update(warTeams)
+    .set({ ...updates, memberIds: memberIdsArray, updatedAt: new Date() })
+    .where(eq(warTeams.id, id))
+    .returning();
+
+  return team;
+}
 }
 
 export const storage = new DatabaseStorage();
