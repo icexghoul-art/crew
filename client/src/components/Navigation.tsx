@@ -47,7 +47,7 @@ export function Navigation() {
             <Sword className="w-5 h-5 text-white transform -rotate-45" />
           </div>
           <span className="font-display text-xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 group-hover:to-primary transition-all">
-            NICK STAN
+            Gorosei
           </span>
         </Link>
 

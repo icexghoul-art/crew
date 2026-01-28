@@ -40,7 +40,7 @@ export default function Home() {
         >
           <motion.div variants={itemVariants} className="mb-6 inline-block">
             <span className="px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium tracking-wider uppercase">
-              Nick stan
+              Gorosei
             </span>
           </motion.div>
 
