@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { users, tickets, ticketMessages, warLogs, pvpLogs, warTeams, type User, type InsertUser, type Ticket, type InsertTicket, type WarLog, type InsertWarLog, type PvpLog, type InsertPvpLog, type InsertTicketMessage, type WarTeam, type InsertWarTeam } from "@shared/schema";
 import { eq, desc, and, or } from "drizzle-orm";
+import { ticketMessages } from "@shared/schema";
 
 export interface IStorage {
   // User
@@ -120,11 +121,9 @@ export class DatabaseStorage implements IStorage {
   }
 
 async updateWarTeam(id: number, updates: Partial<InsertWarTeam>): Promise<WarTeam> {
-  // Forcer memberIds en number[]
+  // Assurer que memberIds est bien un tableau de nombres
   const memberIdsArray: number[] | undefined = updates.memberIds
-    ? Array.isArray(updates.memberIds)
-      ? updates.memberIds
-      : Array.from(updates.memberIds) as number[]
+    ? Array.from(updates.memberIds).map(Number) // forcer chaque élément en number
     : undefined;
 
   const [team] = await db.update(warTeams)
