@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertUserSchema, insertTicketSchema, insertWarLogSchema, insertPvpLogSchema, insertWarTeamSchema, users, tickets, warLogs, pvpLogs, warTeams } from "./schema";
+import { insertUserSchema, insertTicketSchema, insertWarLogSchema, insertPvpLogSchema, insertWarTeamSchema, users, tickets, warLogs, pvpLogs, warTeams, ticketMessages } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
