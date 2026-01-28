@@ -87,7 +87,7 @@ export function Navigation() {
               asChild
               className="bg-[#5865F2] hover:bg-[#4752C4] text-white font-medium shadow-lg shadow-[#5865F2]/20 border-none"
             >
-              <a href="/api/auth/discord">Log In with Discord</a>
+              <a href="https://gorosei.onrender.com/api/auth/discord">Log In with Discord</a>
             </Button>
           )}
         </nav>
