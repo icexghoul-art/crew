@@ -3,6 +3,7 @@ import { useTickets, useUpdateTicket } from "@/hooks/use-tickets";
 import { useWarTeams, useUpdateWarTeam } from "@/hooks/use-war-team";
 import { TicketChat } from "@/components/TicketChat";
 import { Redirect } from "wouter";
+import { apiFetch } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +31,7 @@ export default function Admin() {
   useEffect(() => {
     if (user && user.role === "admin") {
       setUsersLoading(true);
-      fetch("/api/admin/users")
+      apiFetch("/api/admin/users")
         .then(res => res.json())
         .then(data => {
           setAllUsers(data);
@@ -52,7 +53,7 @@ export default function Admin() {
         // Ensure users are loaded
         if (allUsers.length === 0 && user?.role === "admin") {
           setUsersLoading(true);
-          fetch("/api/admin/users")
+          apiFetch("/api/admin/users")
             .then(res => res.json())
             .then(data => {
               setAllUsers(data);

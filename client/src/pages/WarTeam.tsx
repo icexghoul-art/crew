@@ -42,7 +42,7 @@ export default function WarTeam() {
 
       if (allMemberIds.size > 0) {
         setLoadingUsers(true);
-        fetch("/api/admin/users")
+        apiFetch("/api/admin/users")
           .then(res => res.json())
           .then((users: UserData[]) => {
             const map = new Map<number, UserData>();
