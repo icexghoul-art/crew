@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
 import WarLogs from "@/pages/WarLogs";
 import PvP from "@/pages/PvP";
+import WarTeam from "@/pages/WarTeam";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/not-found";
 
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/wars" component={WarLogs} />
       <Route path="/pvp" component={PvP} />
+      <Route path="/war-team" component={WarTeam} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

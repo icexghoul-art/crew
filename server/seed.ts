@@ -1,4 +1,6 @@
 import { storage } from "./storage";
+import { db } from "./db";
+import { warTeams } from "@shared/schema";
 
 async function seed() {
   console.log("Seeding database...");
@@ -40,6 +42,19 @@ async function seed() {
       creatorId: 2,
       content: "Requesting a 3v3 war against Red Haired Pirates.",
     });
+  }
+
+  // Check War Teams
+  const existingTeams = await storage.getWarTeams();
+  if (existingTeams.length === 0) {
+    console.log("Creating war teams...");
+    await db.insert(warTeams).values([
+      { tier: "Z", memberIds: [] },
+      { tier: "Y", memberIds: [] },
+      { tier: "X", memberIds: [] },
+      { tier: "S", memberIds: [] },
+      { tier: "A", memberIds: [] },
+    ]);
   }
 
   // Check Logs

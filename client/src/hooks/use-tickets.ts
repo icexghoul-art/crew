@@ -49,3 +49,26 @@ export function useUpdateTicket() {
     },
   });
 }
+
+export function useAddTicketMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ticketId, content }: { ticketId: number; content: string }) => {
+      const url = buildUrl(api.tickets.addMessage.path, { id: ticketId });
+      const res = await fetch(url, {
+        method: api.tickets.addMessage.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to add message");
+      return api.tickets.addMessage.responses[201].parse(await res.json());
+    },
+    onSuccess: (_data, variables) => {
+      // Invalide la query du ticket spécifique pour le rafraîchir
+      queryClient.invalidateQueries({
+        queryKey: [`/api/tickets/${variables.ticketId}`],
+      });
+    },
+  });
+}

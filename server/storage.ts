@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, tickets, ticketMessages, warLogs, pvpLogs, type User, type InsertUser, type Ticket, type InsertTicket, type WarLog, type InsertWarLog, type PvpLog, type InsertPvpLog, type InsertTicketMessage } from "@shared/schema";
+import { users, tickets, ticketMessages, warLogs, pvpLogs, warTeams, type User, type InsertUser, type Ticket, type InsertTicket, type WarLog, type InsertWarLog, type PvpLog, type InsertPvpLog, type InsertTicketMessage, type WarTeam, type InsertWarTeam } from "@shared/schema";
 import { eq, desc, and, or } from "drizzle-orm";
 
 export interface IStorage {
@@ -25,8 +25,9 @@ export interface IStorage {
   getPvpLogs(): Promise<PvpLog[]>;
   createPvpLog(log: InsertPvpLog): Promise<PvpLog>;
   
-  // War Team
-  getWarTeam(): Promise<User[]>;
+  // War Teams
+  getWarTeams(): Promise<WarTeam[]>;
+  updateWarTeam(id: number, updates: Partial<InsertWarTeam>): Promise<WarTeam>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -114,8 +115,13 @@ export class DatabaseStorage implements IStorage {
     return log;
   }
 
-  async getWarTeam(): Promise<User[]> {
-    return await db.select().from(users).where(eq(users.role, "war_fighter"));
+  async getWarTeams(): Promise<WarTeam[]> {
+    return await db.select().from(warTeams).orderBy(warTeams.tier);
+  }
+
+  async updateWarTeam(id: number, updates: Partial<InsertWarTeam>): Promise<WarTeam> {
+    const [team] = await db.update(warTeams).set({ ...updates, updatedAt: new Date() }).where(eq(warTeams.id, id)).returning();
+    return team;
   }
 }
 

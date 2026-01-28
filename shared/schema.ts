@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, integer, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -9,11 +9,22 @@ export const users = pgTable("users", {
   username: text("username").notNull(),
   discordId: text("discord_id").unique(),
   avatar: text("avatar"),
-  role: text("role", { enum: ["admin", "moderator", "member", "guest", "war_fighter"] }).default("guest").notNull(),
+  role: text("role", { enum: ["admin", "moderator", "member", "guest", "war_fighter", "tryouter"] }).default("guest").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+
+// === WAR TEAMS ===
+export const warTeams = pgTable("war_teams", {
+  id: serial("id").primaryKey(),
+  tier: text("tier", { enum: ["Z", "Y", "X", "S", "A"] }).notNull(),
+  memberIds: json("member_ids").$type<number[]>().default([]).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWarTeamSchema = createInsertSchema(warTeams).omit({ id: true, createdAt: true, updatedAt: true });
 
 // === TICKETS ===
 export const tickets = pgTable("tickets", {
@@ -128,4 +139,5 @@ export type InsertTicketMessage = z.infer<typeof insertTicketMessageSchema>;
 export type WarLog = typeof warLogs.$inferSelect;
 export type InsertWarLog = z.infer<typeof insertWarLogSchema>;
 export type PvpLog = typeof pvpLogs.$inferSelect;
-export type InsertPvpLog = z.infer<typeof insertPvpLogSchema>;
+export type InsertPvpLog = z.infer<typeof insertPvpLogSchema>;export type WarTeam = typeof warTeams.$inferSelect;
+export type InsertWarTeam = z.infer<typeof insertWarTeamSchema>;

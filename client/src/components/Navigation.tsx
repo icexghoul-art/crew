@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   LayoutDashboard,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -22,6 +23,7 @@ export function Navigation() {
   const navItems = [
     { href: "/wars", label: "War Logs", icon: Sword },
     { href: "/pvp", label: "1v1 Arena", icon: Users },
+    { href: "/war-team", label: "War Teams", icon: Zap },
   ];
 
   if (user) {
@@ -45,7 +47,7 @@ export function Navigation() {
             <Sword className="w-5 h-5 text-white transform -rotate-45" />
           </div>
           <span className="font-display text-xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 group-hover:to-primary transition-all">
-            DARK LEGION WARIORS
+            NICK STAN
           </span>
         </Link>
 

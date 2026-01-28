@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertUserSchema, insertTicketSchema, insertWarLogSchema, insertPvpLogSchema, users, tickets, warLogs, pvpLogs } from "./schema";
+import { insertUserSchema, insertTicketSchema, insertWarLogSchema, insertPvpLogSchema, insertWarTeamSchema, users, tickets, warLogs, pvpLogs, warTeams } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
@@ -100,9 +100,19 @@ export const api = {
   warTeam: {
     list: {
       method: "GET" as const,
-      path: "/api/war-team",
+      path: "/api/war-teams",
       responses: {
-        200: z.array(z.custom<typeof users.$inferSelect>()),
+        200: z.array(z.custom<typeof warTeams.$inferSelect>()),
+      },
+    },
+    update: {
+      method: "PATCH" as const,
+      path: "/api/war-teams/:id",
+      input: z.object({ memberIds: z.array(z.number()).optional() }),
+      responses: {
+        200: z.custom<typeof warTeams.$inferSelect>(),
+        403: errorSchemas.unauthorized,
+        404: errorSchemas.notFound,
       },
     },
   },

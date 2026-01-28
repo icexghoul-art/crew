@@ -1,21 +1,36 @@
 import { useUser } from "@/hooks/use-auth";
 import { useTickets } from "@/hooks/use-tickets";
 import { TicketModal } from "@/components/TicketModal";
+import { TicketChat } from "@/components/TicketChat";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Ticket, Clock, CheckCircle2, XCircle, Shield } from "lucide-react";
 import { Redirect } from "wouter";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 export default function Dashboard() {
   const { data: user, isLoading: userLoading } = useUser();
   const { data: tickets, isLoading: ticketsLoading } = useTickets();
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
 
   if (userLoading) return <div className="h-screen flex items-center justify-center text-primary">Loading...</div>;
   if (!user) return <Redirect to="/" />;
 
-  const myTickets = tickets?.filter(t => t.creatorId === user.id) || [];
+  const myTickets = tickets?.filter(t => {
+    // Createur voit tous ses tickets
+    if (t.creatorId === user.id) return true;
+    
+    // Tryouters voient les tickets tryout
+    if (user.role === "tryouter" && t.type === "tryout") return true;
+    
+    // War fighters voient les tickets war
+    if (user.role === "war_fighter" && t.type === "war_request") return true;
+    
+    // Autres roles ne voient que leurs propres tickets
+    return false;
+  }) || [];
 
   return (
     <div className="min-h-screen bg-background pb-20 pt-10">
@@ -60,7 +75,10 @@ export default function Dashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                   >
-                    <Card className="bg-secondary border-white/10 hover:border-primary/30 transition-all h-full">
+                    <Card
+                      className="bg-secondary border-white/10 hover:border-primary/30 transition-all h-full cursor-pointer"
+                      onClick={() => setSelectedTicket(ticket)}
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start">
                           <Badge variant="outline" className="uppercase tracking-wider text-[10px] border-primary/30 text-primary">
@@ -94,6 +112,10 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {selectedTicket && (
+        <TicketChat ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
+      )}
     </div>
   );
 }
