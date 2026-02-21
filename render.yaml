@@ -3,21 +3,30 @@ services:
     name: crew-api
     env: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && NODE_ENV=production npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
+        value: 10000
       - key: DATABASE_URL
         scope: shared
       - key: DISCORD_CLIENT_ID
         scope: shared
       - key: DISCORD_CLIENT_SECRET
         scope: shared
+      - key: SESSION_SECRET
+        scope: shared
+      - key: ROCKET_POOL_KEY
+        scope: shared
     autoScaling:
       enabled: false
+    maxNonZeroExitStatus: 1
+    headers:
+      - path: "/*"
+        name: "Cache-Control"
+        value: "public, max-age=3600"
 
   - type: pserv
     name: crew-postgres
